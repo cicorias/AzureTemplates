@@ -3,16 +3,10 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "newStorageAccountName": {
-            "value": "jetarmtest"
-        },
-        "adminUsername": {
-            "value": "foobar"
+            "value": "jetarmtest2"
         },
         "dnsNameForPublicIP": {
-            "value": "jetarmtest"
-        },
-        "adminPassword": {
-            "value": "foobar1"
+            "value": "jetarmtest2"
         },
         "cluster1Name": {
             "value": "maincluster"
@@ -22,6 +16,12 @@
         },
         "vm2Name": {
             "value": "vm2"
+        },
+        "sizeOfEachDataDiskInGB": {
+            "value": "60"
+        },
+        "jetarmtestType": {
+            "value": "Premium_LRS"
         }
     }
 }

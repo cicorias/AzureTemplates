@@ -44,9 +44,18 @@
             "allowedValues": [
                 "Standard_LRS",
                 "Standard_GRS",
-                "Standard_ZRS"
+                "Standard_ZRS",
+                "Premium_LRS"
             ]
         },
+        "sizeOfEachDataDiskInGB": {
+            "type": "string",
+            "metadata": {
+                "description": "Size of each data disk in GB"
+            }
+        },
+
+
         "jetarmtestLocation": {
             "type": "string",
             "defaultValue": "West US",
@@ -117,7 +126,20 @@
         "vm2VnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'primaryNetwork')]",
         "vm2SubnetRef": "[concat(variables('vm2VnetID'), '/subnets/', variables('primaryNetworkSubnet1Name'))]",
         "vm2StorageAccountContainerName": "vhds",
-        "vm2NicName": "[concat(parameters('vm2Name'), 'NetworkInterface')]"
+        "vm2NicName": "[concat(parameters('vm2Name'), 'NetworkInterface')]",
+
+        "lbname": "loadbalancer1",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('lbName'))]",
+        "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+        "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/LoadBalancerFrontEnd')]",
+        "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/BackendPool1')]",
+        "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
+
+        "vmStorageAccountContainerName" : "vhd",
+        "dataDisk1VhdName" : "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vm1Name'),'dataDisk1.vhd')]",
+        "dataDisk2VhdName" : "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vm1Name'),'dataDisk2.vhd')]",
+        "dataDisk3VhdName" : "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vm1Name'),'dataDisk3.vhd')]",
+        "dataDisk4VhdName" : "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',parameters('vm1Name'),'dataDisk4.vhd')]"
 
     },
     "resources": [
@@ -188,12 +210,99 @@
         },
 
         {
+            "apiVersion": "2015-05-01-preview",
+            "name": "[variables('lbName')]",
+            "type": "Microsoft.Network/loadBalancers",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontEnd",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[variables('publicIPAddressID')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "BackendPool1"
+
+                    }
+                ],
+                "inboundNatRules": [
+                    {
+                        "name": "RDP-VM0",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[variables('frontEndIPConfigID')]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 50001,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false
+                        }
+                    },
+                    {
+                        "name": "RDP-VM1",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[variables('frontEndIPConfigID')]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 50002,
+                            "backendPort": 3389,
+                            "enableFloatingIP": false
+                        }
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "LBRule",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[variables('frontEndIPConfigID')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[variables('lbPoolID')]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 5,
+                            "probe": {
+                                "id": "[variables('lbProbeID')]"
+                            }
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "tcpProbe",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 80,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "2"
+                        }
+                    }
+                ]
+            }
+        },
+
+        {
             "name": "[variables('vm1NicName')]",
             "type": "Microsoft.Network/networkInterfaces",
             "location": "[parameters('primaryNetworkLocation')]",
             "apiVersion": "2015-05-01-preview",
             "dependsOn": [
-                "[concat('Microsoft.Network/virtualNetworks/', 'primaryNetwork')]"
+                "[concat('Microsoft.Network/virtualNetworks/', 'primaryNetwork')]",
+                "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
             ],
             "tags": {
                 "displayName": "vm1Nic"
@@ -206,7 +315,18 @@
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
                                 "id": "[variables('vm1SubnetRef')]"
-                            }
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[concat(variables('lbID'), '/backendAddressPools/BackendPool1')]"
+                                }
+                            ],
+                            "loadBalancerInboundNatRules": [
+                                {
+                                    "id": "[concat(variables('lbID'),'/inboundNatRules/RDP-VM0')]"
+                                }
+                            ]
+
                         }
                     }
                 ]
@@ -247,7 +367,49 @@
                         },
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
+                    },
+                    "dataDisks" : [
+                    {
+                        "name" : "datadisk1",
+                        "diskSizeGB" : "[parameters('sizeOfEachDataDiskInGB')]",
+                        "lun" : 0,
+                        "vhd":{
+                            "Uri" : "[variables('dataDisk1VhdName')]"
+                        },
+                        "createOption":"Empty"
+                    },
+                    {
+                        "name" : "datadisk2",
+                        "diskSizeGB" : "[parameters('sizeOfEachDataDiskInGB')]",
+                        "lun" : 1,
+                        "vhd":{
+                            "Uri" : "[variables('dataDisk2VhdName')]"
+                        },
+                        "createOption":"Empty"
+                    },
+                    {
+                        "name" : "datadisk3",
+                        "diskSizeGB" : "[parameters('sizeOfEachDataDiskInGB')]",
+                        "lun" : 2,
+                        "vhd":{
+                            "Uri" : "[variables('dataDisk3VhdName')]"
+                        },
+                        "createOption":"Empty"
+                    },
+                    {
+                        "name" : "datadisk4",
+                        "diskSizeGB" : "[parameters('sizeOfEachDataDiskInGB')]",
+                        "lun" : 3,
+                        "vhd":{
+                            "Uri" : "[variables('dataDisk4VhdName')]"
+                        },
+                        "createOption":"Empty"
                     }
+                ],
+
+
+
+
                 },
                 "networkProfile": {
                     "networkInterfaces": [
@@ -259,6 +421,7 @@
                 "availabilitySet": {
                     "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('cluster1Name'))]"
                 }
+
             }
         },
         {
