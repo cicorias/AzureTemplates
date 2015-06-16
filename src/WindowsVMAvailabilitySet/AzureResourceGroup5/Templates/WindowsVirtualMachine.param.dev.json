@@ -1,0 +1,27 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "newStorageAccountName": {
+            "value": "jetarmtest"
+        },
+        "adminUsername": {
+            "value": "foobar"
+        },
+        "dnsNameForPublicIP": {
+            "value": "jetarmtest"
+        },
+        "adminPassword": {
+            "value": "foobar1"
+        },
+        "cluster1Name": {
+            "value": "maincluster"
+        },
+        "vm1Name": {
+            "value": "vm1"
+        },
+        "vm2Name": {
+            "value": "vm2"
+        }
+    }
+}

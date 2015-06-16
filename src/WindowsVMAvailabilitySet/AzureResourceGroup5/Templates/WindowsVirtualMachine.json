@@ -1,0 +1,342 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "primaryNetworkLocation": {
+            "type": "string",
+            "defaultValue": "West US",
+            "allowedValues": [
+                "East US",
+                "West US",
+                "West Europe",
+                "East Asia",
+                "South East Asia"
+            ]
+        },
+
+        "dnsNameForPublicIP": {
+            "type": "string",
+            "metadata": {
+                "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
+            }
+        },
+
+        "cluster1Name": {
+            "type": "string"
+        },
+        "cluster1Location": {
+            "type": "string",
+            "defaultValue": "West US",
+            "allowedValues": [
+                "East US",
+                "West US",
+                "West Europe",
+                "East Asia",
+                "South East Asia"
+            ]
+        },
+        "newStorageAccountName": {
+            "type": "string"
+        },
+        "jetarmtestType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_ZRS"
+            ]
+        },
+        "jetarmtestLocation": {
+            "type": "string",
+            "defaultValue": "West US",
+            "allowedValues": [
+                "East US",
+                "West US",
+                "West Europe",
+                "East Asia",
+                "South East Asia"
+            ]
+        },
+        "vm1Name": {
+            "type": "string"
+        },
+        "adminUsername": {
+            "type": "securestring"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "vm1WindowsOSVersion": {
+            "type": "string",
+            "defaultValue": "2012-R2-Datacenter",
+            "allowedValues": [
+                "2008-R2-SP1",
+                "2012-Datacenter",
+                "2012-R2-Datacenter",
+                "Windows-Server-Technical-Preview"
+            ]
+        },
+        "vm2Name": {
+            "type": "string"
+        },
+
+        "vm2WindowsOSVersion": {
+            "type": "string",
+            "defaultValue": "2012-R2-Datacenter",
+            "allowedValues": [
+                "2008-R2-SP1",
+                "2012-Datacenter",
+                "2012-R2-Datacenter",
+                "Windows-Server-Technical-Preview"
+            ]
+        }
+
+    },
+    "variables": {
+        "primaryNetworkPrefix": "10.0.0.0/16",
+        "primaryNetworkSubnet1Name": "Subnet-1",
+        "primaryNetworkSubnet1Prefix": "10.0.0.0/24",
+        "publicIPAddressName": "myPublicIP",
+        "publicIPAddressType": "Dynamic",
+        "location": "West US",
+
+
+        "vm1ImagePublisher": "MicrosoftWindowsServer",
+        "vm1ImageOffer": "WindowsServer",
+        "vm1OSDiskName": "vm1OSDisk",
+        "vm1VmSize": "Standard_DS2",
+        "vm1VnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'primaryNetwork')]",
+        "vm1SubnetRef": "[concat(variables('vm1VnetID'), '/subnets/', variables('primaryNetworkSubnet1Name'))]",
+        "vm1StorageAccountContainerName": "vhds",
+        "vm1NicName": "[concat(parameters('vm1Name'), 'NetworkInterface')]",
+        "vm2ImagePublisher": "MicrosoftWindowsServer",
+        "vm2ImageOffer": "WindowsServer",
+        "vm2OSDiskName": "vm2OSDisk",
+        "vm2VmSize": "Standard_DS2",
+        "vm2VnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'primaryNetwork')]",
+        "vm2SubnetRef": "[concat(variables('vm2VnetID'), '/subnets/', variables('primaryNetworkSubnet1Name'))]",
+        "vm2StorageAccountContainerName": "vhds",
+        "vm2NicName": "[concat(parameters('vm2Name'), 'NetworkInterface')]"
+
+    },
+    "resources": [
+        {
+            "name": "primaryNetwork",
+            "type": "Microsoft.Network/virtualNetworks",
+            "location": "[parameters('primaryNetworkLocation')]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "primaryNetwork"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('primaryNetworkPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('primaryNetworkSubnet1Name')]",
+                        "properties": {
+                            "addressPrefix": "[variables('primaryNetworkSubnet1Prefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('cluster1Name')]",
+            "type": "Microsoft.Compute/availabilitySets",
+            "location": "[parameters('cluster1Location')]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "cluster1"
+            },
+            "properties": { "platformFaultDomainCount": "3" }
+        },
+        {
+            "name": "[parameters('newStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "location": "[parameters('jetarmtestLocation')]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "jetarmtest"
+            },
+            "properties": {
+                "accountType": "[parameters('jetarmtestType')]"
+            }
+        },
+
+        {
+            "apiVersion": "2015-05-01-preview",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[parameters('primaryNetworkLocation')]",
+            "tags": {
+                "displayName": "PublicIPAddress"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('dnsNameForPublicIP')]"
+                }
+            }
+        },
+
+        {
+            "name": "[variables('vm1NicName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "location": "[parameters('primaryNetworkLocation')]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', 'primaryNetwork')]"
+            ],
+            "tags": {
+                "displayName": "vm1Nic"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('vm1SubnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('vm1Name')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "location": "[parameters('primaryNetworkLocation')]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('vm1NicName'))]"
+            ],
+            "tags": {
+                "displayName": "vm1"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('vm1VmSize')]"
+                },
+                "osProfile": {
+                    "computername": "[parameters('vm1Name')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('vm1ImagePublisher')]",
+                        "offer": "[variables('vm1ImageOffer')]",
+                        "sku": "[parameters('vm1WindowsOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "vm1OSDisk",
+                        "vhd": {
+                            "uri": "[concat('http://', parameters('newStorageAccountName'), '.blob.core.windows.net/', variables('vm1StorageAccountContainerName'), '/', variables('vm1OSDiskName'), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vm1NicName'))]"
+                        }
+                    ]
+                },
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('cluster1Name'))]"
+                }
+            }
+        },
+        {
+            "name": "[variables('vm2NicName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "location": "[parameters('primaryNetworkLocation')]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', 'primaryNetwork')]"
+            ],
+            "tags": {
+                "displayName": "vm2Nic"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('vm2SubnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('vm2Name')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "location": "[parameters('primaryNetworkLocation')]",
+            "apiVersion": "2015-05-01-preview",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('vm2NicName'))]"
+            ],
+            "tags": {
+                "displayName": "vm2"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('vm2VmSize')]"
+                },
+                "osProfile": {
+                    "computername": "[parameters('vm2Name')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('vm2ImagePublisher')]",
+                        "offer": "[variables('vm2ImageOffer')]",
+                        "sku": "[parameters('vm2WindowsOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "vm2OSDisk",
+                        "vhd": {
+                            "uri": "[concat('http://', parameters('newStorageAccountName'), '.blob.core.windows.net/', variables('vm2StorageAccountContainerName'), '/', variables('vm2OSDiskName'), '.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vm2NicName'))]"
+                        }
+                    ]
+                },
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('cluster1Name'))]"
+                }
+
+            }
+        }
+
+
+    ]
+}
