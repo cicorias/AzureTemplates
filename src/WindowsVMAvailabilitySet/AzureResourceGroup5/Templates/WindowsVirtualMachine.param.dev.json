@@ -18,10 +18,16 @@
             "value": "vm2"
         },
         "sizeOfEachDataDiskInGB": {
-            "value": "128"
+            "value": "1024"
         },
         "jetarmtestType": {
             "value": "Premium_LRS"
+        },
+        "vmsize": { 
+            "value": "Standard_DS2"
+        },
+        "vmSize": {
+            "value": "Standard_DS4"
         }
     }
 }
