@@ -18,7 +18,7 @@
             "value": "vm2"
         },
         "sizeOfEachDataDiskInGB": {
-            "value": "60"
+            "value": "128"
         },
         "jetarmtestType": {
             "value": "Premium_LRS"

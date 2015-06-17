@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "WindowsVMAvailabilitySet", "AzureResourceGroup5\WindowsVMAvailabilitySet.deployproj", "{A354B454-DAC2-49B1-B95A-6A82B6315011}"
+Project("{F5034706-568F-408A-B7B3-4D38C6DB8A32}") = "ServiceManagement", "ServiceManagement.pssproj", "{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A354B454-DAC2-49B1-B95A-6A82B6315011}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A354B454-DAC2-49B1-B95A-6A82B6315011}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A354B454-DAC2-49B1-B95A-6A82B6315011}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A354B454-DAC2-49B1-B95A-6A82B6315011}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

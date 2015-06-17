@@ -50,9 +50,11 @@
         },
         "sizeOfEachDataDiskInGB": {
             "type": "string",
+            "defaultValue": "128",
             "metadata": {
                 "description": "Size of each data disk in GB"
-            }
+            },
+            "allowedValues": ["128", "512", "1024"]
         },
 
 
