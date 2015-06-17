@@ -55,9 +55,9 @@
                 "description": "Size of each data disk in GB"
             },
             "allowedValues": [
-                "128",
-                "512",
-                "1024"
+                "120",
+                "510",
+                "1023"
             ]
         },
 
