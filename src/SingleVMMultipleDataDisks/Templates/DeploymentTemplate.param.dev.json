@@ -1,0 +1,26 @@
+﻿{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "newStorageAccountName": {
+            "value": "jetpremiumtest2"
+        },
+        "adminUsername": {
+            "value": "cicorias"
+        },
+        "dnsNameForPublicIP": {
+            "value": "jetpremiumtest2"
+        },
+        "vmSize": {
+            "value": "Standard_DS4"
+        },
+        "sizeOfEachDataDiskInGB": {
+            "value": "1023"
+        },
+        "storageType": {
+            "value": "Premium_LRS"
+        }
+
+
+    }
+}
